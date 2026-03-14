@@ -56,15 +56,15 @@ module Legion
 
           def to_h
             {
-              id:               @id,
-              anchor_id:        @anchor_id,
-              material:         @material,
-              length:           @length,
-              flexibility:      @flexibility,
+              id:                @id,
+              anchor_id:         @anchor_id,
+              material:          @material,
+              length:            @length,
+              flexibility:       @flexibility,
               flexibility_label: flexibility_label,
-              broken:           broken?,
-              elastic:          elastic?,
-              created_at:       @created_at
+              broken:            broken?,
+              elastic:           elastic?,
+              created_at:        @created_at
             }
           end
 
