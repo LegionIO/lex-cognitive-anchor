@@ -44,6 +44,46 @@ RSpec.describe Legion::Extensions::CognitiveAnchor::Helpers::AnchorEngine do
     end
   end
 
+  describe '#apply_bias with chain flexibility' do
+    it 'returns chain_factor of 1.0 when no chains attached' do
+      a = engine.create_anchor(**default_attrs, reference_value: 0.3, grip: 0.8, weight: 0.6)
+      result = engine.apply_bias(anchor_id: a.id, new_value: 0.9)
+      expect(result[:chain_factor]).to eq(1.0)
+    end
+
+    it 'reduces bias pull with flexible chains (cobweb)' do
+      a = engine.create_anchor(**default_attrs, reference_value: 0.3, grip: 0.8, weight: 0.6)
+      no_chain_result = engine.apply_bias(anchor_id: a.id, new_value: 0.9)
+
+      engine.create_chain(anchor_id: a.id, material: :cobweb)
+      with_chain_result = engine.apply_bias(anchor_id: a.id, new_value: 0.9)
+
+      expect(with_chain_result[:shift]).to be < no_chain_result[:shift]
+    end
+
+    it 'preserves stronger bias pull with rigid chains (steel)' do
+      a = engine.create_anchor(**default_attrs, reference_value: 0.3, grip: 0.8, weight: 0.6)
+      engine.create_chain(anchor_id: a.id, material: :steel)
+      steel_result = engine.apply_bias(anchor_id: a.id, new_value: 0.9)
+
+      a2 = engine.create_anchor(anchor_type: :belief, domain: :test, content: 'x',
+                                reference_value: 0.3, grip: 0.8, weight: 0.6)
+      engine.create_chain(anchor_id: a2.id, material: :cobweb)
+      cobweb_result = engine.apply_bias(anchor_id: a2.id, new_value: 0.9)
+
+      expect(steel_result[:shift]).to be > cobweb_result[:shift]
+    end
+
+    it 'ignores broken chains in flexibility calculation' do
+      a = engine.create_anchor(**default_attrs, reference_value: 0.3, grip: 0.8, weight: 0.6)
+      c = engine.create_chain(anchor_id: a.id, material: :cobweb, flexibility: 0.01)
+      c.instance_variable_set(:@flexibility, 0.01) # below BREAK_THRESHOLD
+
+      result = engine.apply_bias(anchor_id: a.id, new_value: 0.9)
+      expect(result[:chain_factor]).to eq(1.0)
+    end
+  end
+
   describe '#drag_anchor' do
     it 'increases anchor grip' do
       a = engine.create_anchor(**default_attrs, grip: 0.5)

@@ -33,8 +33,10 @@ module Legion
           def apply_bias(anchor_id:, new_value:)
             anchor = fetch_anchor(anchor_id)
             pulled = anchor.bias_pull(new_value.to_f)
-            { anchor: anchor, original: new_value.to_f, biased: pulled,
-              shift: (pulled - new_value.to_f).abs.round(10) }
+            chain_factor = chain_rigidity_factor(anchor_id)
+            biased = (new_value.to_f + ((pulled - new_value.to_f) * chain_factor)).clamp(0.0, 1.0).round(10)
+            { anchor: anchor, original: new_value.to_f, biased: biased,
+              shift: (biased - new_value.to_f).abs.round(10), chain_factor: chain_factor }
           end
 
           def drag_anchor(anchor_id:, rate: Constants::DRAG_RATE)
@@ -108,6 +110,14 @@ module Legion
           end
 
           private
+
+          def chain_rigidity_factor(anchor_id)
+            active = chains_for(anchor_id).reject(&:broken?)
+            return 1.0 if active.empty?
+
+            avg_flex = active.sum(&:flexibility) / active.size.to_f
+            (1.0 - (avg_flex * 0.5)).round(10)
+          end
 
           def fetch_anchor(id)
             @anchors.fetch(id) { raise ArgumentError, "anchor not found: #{id}" }

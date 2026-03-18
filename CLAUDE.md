@@ -11,7 +11,7 @@ Cognitive anchoring and belief tethering — anchor points resist change via gri
 ## Gem Info
 
 - **Gem name**: `lex-cognitive-anchor`
-- **Version**: `0.1.0`
+- **Version**: `0.1.1`
 - **Module**: `Legion::Extensions::CognitiveAnchor`
 - **Ruby**: `>= 3.4`
 - **License**: MIT
@@ -84,5 +84,5 @@ No actor defined — no automatic drift or drag. This extension models how exist
 - `extend self` pattern: runner is a module with module-level methods; shared `@engine` lives in the module's singleton
 - `BREAK_THRESHOLD = 0.1` is intentionally low — anchors are persistent; they require sustained challenge (`drag_anchor` calls) to break
 - `DRAG_RATE (0.06) > DRIFT_RATE (0.03)`: active challenge degrades grip twice as fast as passive time decay
-- Chain material determines flexibility label only — the mechanics of chain flexibility are not yet enforced on bias calculations (stub intent)
+- Chain flexibility modulates bias pull: `chain_factor = 1.0 - (avg_flexibility * 0.5)`, so cobweb chains (0.9 flexibility) reduce pull by 45% while steel chains (0.3) only reduce by 15%; broken chains are excluded
 - `apply_bias` returns a hash with both the adjusted estimate and bias magnitude — callers must decide how to apply the adjustment
